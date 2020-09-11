@@ -123,4 +123,37 @@ namespace ts.tscWatch {
             checkProgramActualFiles(watch.getProgram().getProgram(), [mainFile.path, otherFile.path, libFile.path]);
         });
     });
+
+    describe.only("unittests:: tsc-watch:: watchApi:: when watchHost can add extraFileExtensions to process and watch", () => {
+        it("verifies that extraFileExtensions are supported to get the program with other extensions", () => {
+            const config: File = {
+                path: `${projectRoot}/tsconfig.json`,
+                content: "{}"
+            };
+            const mainFile: File = {
+                path: `${projectRoot}/main.ts`,
+                content: "const x = 10;"
+            };
+            const otherFile: File = {
+                path: `${projectRoot}/other.vue`,
+                content: ""
+            };
+            const sys = createWatchedSystem([config, mainFile, libFile]);
+            const watchCompilerHost = createWatchCompilerHost(
+                config.path,
+                { allowNonTsExtensions: true },
+                sys,
+                /*createProgram*/ undefined,
+                /*reportDiagnostics*/ undefined,
+                /*reportWatchStatus*/ undefined,
+                /*watchOptionsToExtend*/ undefined,
+                [{ extension: ".vue", isMixedContent: true, scriptKind: ScriptKind.Deferred }]
+            );
+            const watch = createWatchProgram(watchCompilerHost);
+            checkProgramActualFiles(watch.getProgram().getProgram(), [mainFile.path, libFile.path]);
+
+            sys.writeFile(otherFile.path, otherFile.content);
+            checkProgramActualFiles(watch.getProgram().getProgram(), [mainFile.path, otherFile.path, libFile.path]);
+        });
+    });
 }
